@@ -33,7 +33,7 @@ phases:
 artifacts:
   files:
     - appspec.yml
-    - imagedefinitions.json
     - scripts/**/*
   discard-paths: no
+  packaging: ZIP
 
