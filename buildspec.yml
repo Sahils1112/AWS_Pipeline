@@ -1,4 +1,3 @@
-# buildspec.yml
 version: 0.2
 
 phases:
@@ -9,14 +8,16 @@ phases:
       - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 145023138993.dkr.ecr.ap-south-1.amazonaws.com
       - export REPOSITORY_URI=145023138993.dkr.ecr.ap-south-1.amazonaws.com/httpd-app
       - export IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - echo "REPOSITORY_URI: ${REPOSITORY_URI}"
-      - echo "IMAGE_TAG: ${IMAGE_TAG}"
+      - echo "REPOSITORY_URI: $REPOSITORY_URI"
+      - echo "IMAGE_TAG: $IMAGE_TAG"
+
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
       - docker build -t $REPOSITORY_URI:latest .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+
   post_build:
     commands:
       - echo Build completed on `date`
@@ -24,13 +25,15 @@ phases:
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo "Writing image definitions file..."
-      - printf '[{"name":"httpd-app","imageUri":"%s"}]' $REPOSITORY_URI:latest > imagedefinitions.json
+      - printf '[{"name":"httpd-app","imageUri":"%s"}]' "$REPOSITORY_URI:latest" > imagedefinitions.json
       - echo "Updating appspec.yml with ECR URI..."
-      # Replace the placeholder in appspec.yml for the Docker image name
       - sed -i "s|145023138993.dkr.ecr.ap-south-1.amazonaws.com/httpd-app:latest|$REPOSITORY_URI:latest|g" appspec.yml
-      - cat appspec.yml # Verify the change
+      - cat appspec.yml
+
 artifacts:
   files:
     - appspec.yml
+    - imagedefinitions.json
     - scripts/**/*
   discard-paths: no
+
